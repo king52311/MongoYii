@@ -192,9 +192,44 @@ class EMongoCriteria extends CComponent
 	 */
 	public function addCondition($column, $value, $operator = null)
 	{
-		$this->_condition[$column] = $operator === null ? $value : array($operator => $value);
+		$operator = $this->getOperatorByShortOpt($operator);
++		if($operator === null ){
++			$this->_condition[$column] = $value;
++		}else{
++			$this->_condition[$column][$operator] = $value;
++		}
 		return $this;
 	}
+	
+	/**
+	 *  to operator escape
+	 * @param $operator
+	 * @return null|string
+	 */
+	private function getOperatorByShortOpt($operator)
+	{
+			switch($operator){
+				case "<>":
+					$op = '$ne';
+					break;
+				case "<=":
+					$op = '$lte';
+					break;
+				case ">=":
+					$op = '$gte';
+					break;
+				case "<":
+					$op = '$lt';
+					break;
+				case ">":
+					$op = '$gt';
+					break;
+				case "=":
+				default:
+					$op = null;
+			}
+		return $op;
+		}
 
 	/**
 	 * Adds an $or condition to the criteria, will overwrite other $or conditions
@@ -243,32 +278,11 @@ class EMongoCriteria extends CComponent
 				}
 			}
 
-			switch($op){
-				case "<>":
-					$query[$column] = array('$ne' => $value);
-					break;
-				case "<=":
-					$query[$column] = array('$lte' => $value);
-					break;
-				case ">=":
-					$query[$column] = array('$gte' => $value);
-					break;
-				case "<":
-					$query[$column] = array('$lt' => $value);
-					break;
-				case ">":
-					$query[$column] = array('$gt' => $value);
-					break;
-				case "=":
-				default:
-					$query[$column] = $value;
-					break;
-			}
 		}
 		if(!$query){
 			$query[$column] = $value;
 		}
-		$this->addCondition($column,  $query[$column]);
+		$this->addCondition($column,  $query[$column],$op);
 		return $this;
 	}
 
